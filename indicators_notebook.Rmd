@@ -1,0 +1,188 @@
+---
+title: "INDICATORS DESAGREGATION"
+output: html_notebook
+---
+
+## LOAD LIBRARIES
+
+```{r echo=TRUE}
+
+if(!require("pacman")) install.packages("pacman")
+
+pacman::p_load(tidyverse, haven, forcats)
+```
+
+## LOAD DATA
+
+```{r}
+
+demographics <- haven::read_sav("input/DataExercise/SPSS files/DemographicsDIST.sav")
+```
+
+## INDICATORS CALCULATION
+
+### I - EMPOWERMENT INDICATOR: Child Marriage
+
+Indicator Definition : number of women aged 18-24 who were married before age 18 / total number of women aged 18-24 \* 100
+
+Variables :
+
+-   P4_SEX_P = Sex (1 - Male, 2 - Female)
+
+-   P5_AGE_P = Age (Between 18 & 24)
+
+-   CONST_P = Constituency
+
+#### **Desegregate By Constituency**
+
+```{r paged.print=TRUE}
+
+child_marriage <- 
+  demographics |>
+  dplyr::filter(P5_AGE_P >= 18, P5_AGE_P <= 24, P4_SEX_P == 2) |>
+  dplyr::group_by(CONST_P) |>
+  dplyr::summarise(
+    total.girls.18_24 = n(),
+    married.18.above = sum(P37_AGE_FIRST_MARRAIGE_P >= 18, na.rm = T),
+    married.before.18 = sum(P37_AGE_FIRST_MARRAIGE_P < 18, na.rm = T),
+    married.NA = sum(is.na(P37_AGE_FIRST_MARRAIGE_P)),
+    rate.cm.18.above = round(married.18.above / total.girls.18_24, 2),
+    rate.cm.before.18 = round(married.before.18 / total.girls.18_24, 2),
+    rate.cm.NA = round(married.NA / total.girls.18_24, 2)
+  ) |>
+  dplyr::mutate(
+    CONST_P_name = forcats::as_factor(CONST_P)
+  ) |>
+  dplyr::select(
+    CONST_P_name,
+    everything()
+  )
+
+child_marriage
+
+```
+
+### II - EDUCATION INDICATOR: Secondary school Net Attendance Ratio (NAR)
+
+Indicator Definition :
+
+number of youth aged 14-18, attending secondary school (which means, completed grade 7-11) / total number of youth aged 14-18 \* 100
+
+According to DHR report:
+
+-   secondary school age are 14-18 years
+
+-   secondary school grade are 8-12)
+
+Variables :
+
+-   P28_HIGHEST_LEVEL_P =
+
+-   P27_ATTENDING_SCHOOL_P =
+
+-   P26_EVER_ATTEND_SCHOOL_P =
+
+#### **Desegregate By Constituency**
+
+```{r echo=TRUE}
+
+sec_school_nar <- 
+  demographics |>
+  dplyr::mutate(
+    P28Sec = case_when(
+      P28_HIGHEST_LEVEL_P %in% 7:11 ~ 1,
+      TRUE ~ 2
+    ),
+    SecSchAtt = case_when(
+      P27_ATTENDING_SCHOOL_P == 1 & P28Sec == 2 ~ 3,
+      P26_EVER_ATTEND_SCHOOL_P == 2 ~ 4,
+      TRUE ~ P27_ATTENDING_SCHOOL_P
+    )
+  ) |>
+  dplyr::filter(P5_AGE_P >= 14, P5_AGE_P <= 18) |>
+  dplyr::group_by(CONST_P) |>
+  dplyr::summarise(
+    total.youth.14_18 = n(),
+    attending.sec.school = sum(SecSchAtt == 1, na.rm = TRUE),
+    rate.sec.attendance = round(attending.sec.school / total.youth.14_18, 2)
+  ) |>
+  dplyr::mutate(
+    CONST_P_name = forcats::as_factor(CONST_P),
+  ) |>
+  dplyr::select(
+    CONST_P_name,
+    everything()
+  )
+
+sec_school_nar
+
+```
+
+### III - EMPLOYMENT INDICATOR : Youth (20-24 years of age) not in employment, education or training (NEET)
+
+Indicator Definition :
+
+number of youth aged 20-24 not in employment, education or training \*100 / total number of youth aged 20-24
+
+Variables :
+
+-   P32_ACTIVITY_LAST_12_MONTHS_P =
+
+-   P5_AGE_P = Age (20 - 24)
+
+#### **Desegregate By Constituency**
+
+```{r echo=TRUE}
+
+youth_umemplyment <- 
+  demographics |>
+  dplyr::mutate(
+    Employ = case_when(
+      P32_ACTIVITY_LAST_12_MONTHS_P %in% 1:6 ~ 1,
+      P32_ACTIVITY_LAST_12_MONTHS_P %in% 7:9 ~ 2,
+      P32_ACTIVITY_LAST_12_MONTHS_P == 11 ~ 2,
+      P32_ACTIVITY_LAST_12_MONTHS_P == 10 ~ 3
+    )
+  ) |>
+  dplyr::filter(P5_AGE_P >= 20, P5_AGE_P <= 24) |>
+  dplyr::group_by(CONST_P) |>
+  summarise(
+    total.youth.20_24 = n(),
+    neet = sum(Employ == 2, na.rm = TRUE),
+    rate.neet = round(neet / total.youth.20_24, 2)
+  ) |>
+  dplyr::mutate(
+    CONST_P_name = forcats::as_factor(CONST_P),
+  ) |>
+  dplyr::select(
+    CONST_P_name,
+    everything()
+  ) 
+
+youth_umemplyment
+
+```
+
+## EXPORT RESULTS
+
+```{r}
+
+indicators_df <- 
+  child_marriage |>
+  dplyr::left_join(
+    sec_school_nar,
+    by = c("CONST_P_name", "CONST_P")
+  ) |>
+  dplyr::left_join(
+    youth_umemplyment,
+    by = c("CONST_P_name", "CONST_P")
+  )
+
+indicators_df
+
+```
+
+```{r}
+
+readr::write_csv(x = indicators_df, file = "output/indicators.csv")
+```
