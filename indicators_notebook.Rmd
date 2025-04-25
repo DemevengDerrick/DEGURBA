@@ -19,7 +19,7 @@ This R markdown template will take through computation of some SDG 3, 5 and 8 ke
 
 if(!require("pacman")) install.packages("pacman")
 
-pacman::p_load(tidyverse, haven, forcats, gt)
+pacman::p_load(tidyverse, haven, forcats, gt, sf)
 ```
 
 ## LOAD DATA
@@ -29,6 +29,8 @@ This represent 10% from the Zambia 2010 population and houses census data whose 
 ```{r}
 
 demographics <- haven::read_sav("input/DataExercise/SPSS files/DemographicsDIST.sav")
+
+sf_feature <- sf::read_sf("input/TUC/zambia_constituency_reproj_pop_GHS-DU-TUC.shp")
 ```
 
 ## SDG 3 : Good Health and Well Being
@@ -86,8 +88,8 @@ adolescent_birth_rate <-
                                   P42_LAST_12_MON_P == 1, na.rm = TRUE),
     total_ado_birth_15_19 = sum(dplyr::between(P5_AGE_P, 15, 19) &
                                   P42_LAST_12_MON_P == 1, na.rm = TRUE),
-    abr_10_14 = (total_ado_birth_10_14 / total_ado_10_14) * 1000,
-    abr_15_19 = (total_ado_birth_15_19 / total_ado_15_19) * 1000
+    abr_10_14 = round((total_ado_birth_10_14 / total_ado_10_14) * 1000,2),
+    abr_15_19 = round((total_ado_birth_15_19 / total_ado_15_19) * 1000,2)
   ) |>
   dplyr::mutate(
     CONST_P_name = forcats::as_factor(CONST_P)
@@ -100,6 +102,31 @@ adolescent_birth_rate <-
 # Print table
 adolescent_birth_rate |>
   gt::gt()
+```
+
+**Visualization**
+
+```{r}
+
+sf_feature |>
+  dplyr::select(NAME1_, geometry) |>
+  dplyr::left_join(
+    adolescent_birth_rate,
+    by = c("NAME1_" = "CONST_P_name")
+  ) |>
+  tidyr::pivot_longer(
+    cols = c("abr_10_14", "abr_15_19"),
+    names_to = "abr_cat",
+    values_to = "abr_rate"
+  ) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_sf(aes(fill = abr_rate), color = "white") +
+  ggplot2::scale_fill_distiller(palette = "RdPu", direction = 1) +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "bottom"
+  ) +
+  ggplot2::facet_grid(~abr_cat)
 ```
 
 ## SDG 5 : GENDER EQUALITY
@@ -184,8 +211,33 @@ child_marriage <-
     everything()
   )
 
+# print table
 child_marriage |>
   gt::gt()
+```
+
+**Visualization**
+
+```{r}
+sf_feature |>
+  dplyr::select(NAME1_, geometry) |>
+  dplyr::left_join(
+    child_marriage,
+    by = c("NAME1_" = "CONST_P_name")
+  ) |>
+  tidyr::pivot_longer(
+    cols = c("prop.cm.before.15", "prop.cm.before.18"),
+    names_to = "child_marriage",
+    values_to = "cm_rate"
+  ) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_sf(aes(fill = cm_rate), color = "white") +
+  ggplot2::scale_fill_distiller(palette = "RdPu", direction = 1) +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "bottom"
+  ) +
+  ggplot2::facet_grid(~child_marriage)
 ```
 
 ## SDG 8 : DECENT WORK AND ECONOMIC GROWTH
@@ -246,9 +298,35 @@ youth_umemplyment <-
     values_from = 4:6
   ) 
 
+# print table
 youth_umemplyment |>
   tibble::tibble() |>
   gt::gt()
+```
+
+**Visualization**
+
+```{r}
+
+sf_feature |>
+  dplyr::select(NAME1_, geometry) |>
+  dplyr::left_join(
+    youth_umemplyment,
+    by = c("NAME1_" = "CONST_P_name")
+  ) |>
+  tidyr::pivot_longer(
+    cols = c("rate.neet_Male", "rate.neet_Female"),
+    names_to = "neet",
+    values_to = "neet_rate"
+  ) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_sf(aes(fill = neet_rate), color = "white") +
+  ggplot2::scale_fill_distiller(palette = "RdPu", direction = 1) +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "bottom"
+  ) +
+  ggplot2::facet_grid(~neet)
 ```
 
 ## EXPORT RESULTS
