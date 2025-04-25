@@ -1,7 +1,17 @@
 ---
-title: "INDICATORS DESAGREGATION"
+title: "SDG INDICATORS CALCULATIONS - Zambia Example"
 output: html_notebook
 ---
+
+## INTRODUCTION
+
+This R markdown template will take through computation of some SDG 3, 5 and 8 key indicators namely;
+
+-   SDG Indicator 3.7.2: Adolescent birth rate (aged 10–14 years; aged 15–19 years) per 1,000 women in that age group.
+
+-   SDG INDICATOR 5.3.1: Proportion of women aged 20–24 years who were married or in a union before age 15 and before age 18.
+
+-   SDG INDICATOR 8.6.1: Proportion of youth (aged 15-24 years) not in education, employment or training.
 
 ## LOAD LIBRARIES
 
@@ -9,46 +19,162 @@ output: html_notebook
 
 if(!require("pacman")) install.packages("pacman")
 
-pacman::p_load(tidyverse, haven, forcats)
+pacman::p_load(tidyverse, haven, forcats, gt)
 ```
 
 ## LOAD DATA
+
+This represent 10% from the Zambia 2010 population and houses census data whose sole purpose is for this exercise.
 
 ```{r}
 
 demographics <- haven::read_sav("input/DataExercise/SPSS files/DemographicsDIST.sav")
 ```
 
-## INDICATORS CALCULATION
+## SDG 3 : Good Health and Well Being
 
-### I - EMPOWERMENT INDICATOR: Child Marriage
+### SDG TARGET 3.7: By 2030, ensure universal access to sexual and reproductive health-care services, including for family planning, information and education, and the integration of reproductive health into national strategies and programmes.
 
-Indicator Definition : number of women aged 18-24 who were married before age 18 / total number of women aged 18-24 \* 100
+#### SDG Indicator 3.7.2: Adolescent birth rate (aged 10–14 years; aged 15–19 years) per 1,000 women in that age group
 
-Variables :
+adolescent_birth_rate_10_14 = (number of women aged 10 - 14 with live birth in the past 12 months / number of women aged 10 - 14)\*1000
 
--   P4_SEX_P = Sex (1 - Male, 2 - Female)
+adolescent_birth_rate_14_19 = (number of women aged 14 - 19 with live birth in the past 12 months / number of women aged 14 - 19)\*1000
 
--   P5_AGE_P = Age (Between 18 & 24)
+**Input Variables Definition:**
 
--   CONST_P = Constituency
+-   *P4_SEX_P = SexP4_SEX_P*
 
-#### **Desegregate By Constituency**
+-   *P5_AGE_P = Age*
+
+-   *P42_LAST_12_MON_P = Live births in the past 12 months*
+
+-   *CONST_P = Constituency (Admin 4)*
+
+**Output Variables Definition:**
+
+-   *total_ado_10_14 = Total female adolescents aged 10 to 14*
+
+-   *total_ado_15_19 = Total female adolescents aged 15 to 19*
+
+-   *total_ado_birth_10_14 = Total female adolescents aged 10 to 14 with live birth in the past 12 months*
+
+-   *total_ado_birth_15_19 = Total female adolescents aged 15 to 19 with live birth in the past 12 months*
+
+-   *abr_10_14 = Adolescent aged 10 to 14 birth rate*
+
+-   *abr_15_19 = Adolescent aged 15 to 19 birth rate*
+
+**Methodology:**
+
+1- Filter the Sex to Female by using the P4_SEX_P == 2
+
+2- Group by the constituency
+
+3- Compute summary statistics
+
+```{r}
+
+adolescent_birth_rate <- 
+  demographics |>
+  dplyr::filter(P4_SEX_P == 2) |>
+  dplyr::group_by(CONST_P) |>
+  dplyr::summarise(
+    total_ado_10_14 = sum(dplyr::between(P5_AGE_P, 10, 14), na.rm = TRUE),
+    total_ado_15_19 = sum(dplyr::between(P5_AGE_P, 15, 19), na.rm = TRUE),
+    total_ado_birth_10_14 = sum(dplyr::between(P5_AGE_P, 10, 14) &
+                                  P42_LAST_12_MON_P == 1, na.rm = TRUE),
+    total_ado_birth_15_19 = sum(dplyr::between(P5_AGE_P, 15, 19) &
+                                  P42_LAST_12_MON_P == 1, na.rm = TRUE),
+    abr_10_14 = (total_ado_birth_10_14 / total_ado_10_14) * 1000,
+    abr_15_19 = (total_ado_birth_15_19 / total_ado_15_19) * 1000
+  ) |>
+  dplyr::mutate(
+    CONST_P_name = forcats::as_factor(CONST_P)
+  ) |>
+  dplyr::select(
+    CONST_P_name,
+    everything()
+  ) 
+
+# Print table
+adolescent_birth_rate |>
+  gt::gt()
+```
+
+## SDG 5 : GENDER EQUALITY
+
+### SDG TARGET 5.3 : Eliminate all harmful practices, such as child, early and forced marriage and female genital mutilations
+
+#### SDG INDICATOR 5.3.1: Proportion of women aged 20–24 years who were married or in a union before age 15 and before age 18
+
+child_marriage_before_15 = (number of women aged 20-24 who were married before age 15 / total number of women aged 20-24 )\* 100
+
+child_marriage_before_18 = (number of women aged 20-24 who were married before age 18 / total number of women aged 20-24 )\* 100
+
+**Input Variables Definition:**
+
+-   *P4_SEX_P = Sex (1 - Male, 2 - Female)*
+
+-   *P5_AGE_P = Age*
+
+-   *CONST_P = Constituency*
+
+**Output Variable Definition:**
+
+-   *total.girls.20_24 = Total number of females aged 20 to 24*
+
+-   *married.before.15 = Total number of females married before 15*
+
+-   *married.before.18 = Total number of females married before 18*
+
+-   *prop.cm.before.15 = Proportion of child marriages before 15*
+
+-   *prop.cm.before.18 = Proportion of child marriages before 18*
+
+**Methodolgy :**
+
+***Step1: Explore Variables***
+
+```{r}
+
+# Frequency distribution by sex and age
+demographics$P4_SEX_P |> hist(xlab = "Sex", ylab = "Frequency")
+demographics$P5_AGE_P |> hist(xlab = "Age", ylab = "Frequency")
+
+# Age distribution by Sex
+demographics |>
+  group_by(P4_SEX_P, P5_AGE_P) |>
+  summarise(pop_count = n()/10000) |>
+  mutate(
+    pop_count = case_when(
+      P4_SEX_P == 1 ~ -pop_count,
+      P4_SEX_P == 2 ~ pop_count
+    ),
+    sex_label = factor(P4_SEX_P, levels = c(1, 2), labels = c("Male", "Female")),
+    age_factor = factor(P5_AGE_P, levels = sort(unique(P5_AGE_P)))
+  ) |>
+  ggplot2::ggplot(aes(x = pop_count, y = age_factor, fill = sex_label)) +
+  ggplot2::geom_bar(stat = "identity", width = 1, , color = "white") +
+  ggplot2::scale_x_continuous(labels = abs) +
+  ggplot2::labs(x = "Population Count (million)", y = "Age", fill = "Sex") +
+  ggplot2::theme_minimal()
+```
+
+***Step2: Statistics by Constituency (Admin 4 Zambia)***
 
 ```{r paged.print=TRUE}
 
 child_marriage <- 
   demographics |>
-  dplyr::filter(P5_AGE_P >= 18, P5_AGE_P <= 24, P4_SEX_P == 2) |>
+  dplyr::filter(P5_AGE_P >= 20, P5_AGE_P <= 24, P4_SEX_P == 2) |>
   dplyr::group_by(CONST_P) |>
   dplyr::summarise(
-    total.girls.18_24 = n(),
-    married.18.above = sum(P37_AGE_FIRST_MARRAIGE_P >= 18, na.rm = T),
+    total.girls.20_24 = n(),
+    married.before.15 = sum(P37_AGE_FIRST_MARRAIGE_P < 15, na.rm = T),
     married.before.18 = sum(P37_AGE_FIRST_MARRAIGE_P < 18, na.rm = T),
-    married.NA = sum(is.na(P37_AGE_FIRST_MARRAIGE_P)),
-    rate.cm.18.above = round(married.18.above / total.girls.18_24, 2),
-    rate.cm.before.18 = round(married.before.18 / total.girls.18_24, 2),
-    rate.cm.NA = round(married.NA / total.girls.18_24, 2)
+    prop.cm.before.15 = round(married.before.15 / total.girls.20_24, 2),
+    prop.cm.before.18 = round(married.before.18 / total.girls.20_24, 2)
   ) |>
   dplyr::mutate(
     CONST_P_name = forcats::as_factor(CONST_P)
@@ -58,79 +184,35 @@ child_marriage <-
     everything()
   )
 
-child_marriage
-
+child_marriage |>
+  gt::gt()
 ```
 
-### II - EDUCATION INDICATOR: Secondary school Net Attendance Ratio (NAR)
+## SDG 8 : DECENT WORK AND ECONOMIC GROWTH
 
-Indicator Definition :
+### SDG TARGET 8.6 : By 2020, substantially reduce the proportion of youth not in employment, education or training
 
-number of youth aged 14-18, attending secondary school (which means, completed grade 7-11) / total number of youth aged 14-18 \* 100
+#### SDG INDICATOR 8.6.1: Proportion of youth (aged 15-24 years) not in education, employment or training
 
-According to DHR report:
+NEET rate (%) = (Youth – Youth in employment – Youth not in employment but in education or training) / Youth \*100
 
--   secondary school age are 14-18 years
+**Input Variables Definition :**
 
--   secondary school grade are 8-12)
+-   *P32_ACTIVITY_LAST_12_MONTHS_P = Activity in the last 12 months*
 
-Variables :
+-   *P5_AGE_P = Age*
 
--   P28_HIGHEST_LEVEL_P =
+**Output Variables Definition :**
 
--   P27_ATTENDING_SCHOOL_P =
+-   *total.youth.15_24 = Total number of people aged 15 to 24 (Youth)*
 
--   P26_EVER_ATTEND_SCHOOL_P =
+-   *total.neet = Number of youths not employed, not in education or training*
 
-#### **Desegregate By Constituency**
+-   *rate.need = proportion of youths not employed, not in education or training*
 
-```{r echo=TRUE}
+***Step1: Explore Variables***
 
-sec_school_nar <- 
-  demographics |>
-  dplyr::mutate(
-    P28Sec = case_when(
-      P28_HIGHEST_LEVEL_P %in% 7:11 ~ 1,
-      TRUE ~ 2
-    ),
-    SecSchAtt = case_when(
-      P27_ATTENDING_SCHOOL_P == 1 & P28Sec == 2 ~ 3,
-      P26_EVER_ATTEND_SCHOOL_P == 2 ~ 4,
-      TRUE ~ P27_ATTENDING_SCHOOL_P
-    )
-  ) |>
-  dplyr::filter(P5_AGE_P >= 14, P5_AGE_P <= 18) |>
-  dplyr::group_by(CONST_P) |>
-  dplyr::summarise(
-    total.youth.14_18 = n(),
-    attending.sec.school = sum(SecSchAtt == 1, na.rm = TRUE),
-    rate.sec.attendance = round(attending.sec.school / total.youth.14_18, 2)
-  ) |>
-  dplyr::mutate(
-    CONST_P_name = forcats::as_factor(CONST_P),
-  ) |>
-  dplyr::select(
-    CONST_P_name,
-    everything()
-  )
-
-sec_school_nar
-
-```
-
-### III - EMPLOYMENT INDICATOR : Youth (20-24 years of age) not in employment, education or training (NEET)
-
-Indicator Definition :
-
-number of youth aged 20-24 not in employment, education or training \*100 / total number of youth aged 20-24
-
-Variables :
-
--   P32_ACTIVITY_LAST_12_MONTHS_P =
-
--   P5_AGE_P = Age (20 - 24)
-
-#### **Desegregate By Constituency**
+***Step2: Statistics by Constituency (Admin 4 Zambia) & Sex***
 
 ```{r echo=TRUE}
 
@@ -144,43 +226,53 @@ youth_umemplyment <-
       P32_ACTIVITY_LAST_12_MONTHS_P == 10 ~ 3
     )
   ) |>
-  dplyr::filter(P5_AGE_P >= 20, P5_AGE_P <= 24) |>
-  dplyr::group_by(CONST_P) |>
+  dplyr::filter(P5_AGE_P >= 15, P5_AGE_P <= 24) |>
+  dplyr::group_by(CONST_P, P4_SEX_P) |>
   summarise(
-    total.youth.20_24 = n(),
-    neet = sum(Employ == 2, na.rm = TRUE),
-    rate.neet = round(neet / total.youth.20_24, 2)
+    total.youth.15_24 = n(),
+    total.neet = sum(Employ == 2, na.rm = TRUE),
+    rate.neet = round(total.neet / total.youth.15_24, 2)
   ) |>
   dplyr::mutate(
     CONST_P_name = forcats::as_factor(CONST_P),
+    P4_SEX_P = forcats::as_factor(P4_SEX_P)
   ) |>
   dplyr::select(
     CONST_P_name,
     everything()
+  ) |>
+  tidyr::pivot_wider(
+    names_from =  P4_SEX_P,
+    values_from = 4:6
   ) 
 
-youth_umemplyment
-
+youth_umemplyment |>
+  tibble::tibble() |>
+  gt::gt()
 ```
 
 ## EXPORT RESULTS
+
+1- Merge all results into one data frame
 
 ```{r}
 
 indicators_df <- 
   child_marriage |>
   dplyr::left_join(
-    sec_school_nar,
+    adolescent_birth_rate,
     by = c("CONST_P_name", "CONST_P")
   ) |>
   dplyr::left_join(
     youth_umemplyment,
     by = c("CONST_P_name", "CONST_P")
   )
-
-indicators_df
-
+# print table
+indicators_df |>
+  gt::gt()
 ```
+
+2- Export the results into a CSV file for further analysis
 
 ```{r}
 
