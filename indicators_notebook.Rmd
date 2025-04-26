@@ -1,6 +1,9 @@
 ---
 title: "SDG INDICATORS CALCULATIONS - Zambia Example"
-output: html_notebook
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 ## INTRODUCTION
@@ -55,17 +58,17 @@ adolescent_birth_rate_14_19 = (number of women aged 14 - 19 with live birth in t
 
 **Output Variables Definition:**
 
--   *total_ado_10_14 = Total female adolescents aged 10 to 14*
+-   *total.ado.10_14 = Total female adolescents aged 10 to 14*
 
--   *total_ado_15_19 = Total female adolescents aged 15 to 19*
+-   *total.ado.15_19 = Total female adolescents aged 15 to 19*
 
--   *total_ado_birth_10_14 = Total female adolescents aged 10 to 14 with live birth in the past 12 months*
+-   *total.ado.birth.10_14 = Total female adolescents aged 10 to 14 with live birth in the past 12 months*
 
--   *total_ado_birth_15_19 = Total female adolescents aged 15 to 19 with live birth in the past 12 months*
+-   *total.ado.birth.15_19 = Total female adolescents aged 15 to 19 with live birth in the past 12 months*
 
--   *abr_10_14 = Adolescent aged 10 to 14 birth rate*
+-   *abr.10_14 = Adolescent aged 10 to 14 birth rate*
 
--   *abr_15_19 = Adolescent aged 15 to 19 birth rate*
+-   *abr.15_19 = Adolescent aged 15 to 19 birth rate*
 
 **Methodology:**
 
@@ -82,14 +85,14 @@ adolescent_birth_rate <-
   dplyr::filter(P4_SEX_P == 2) |>
   dplyr::group_by(CONST_P) |>
   dplyr::summarise(
-    total_ado_10_14 = sum(dplyr::between(P5_AGE_P, 10, 14), na.rm = TRUE),
-    total_ado_15_19 = sum(dplyr::between(P5_AGE_P, 15, 19), na.rm = TRUE),
-    total_ado_birth_10_14 = sum(dplyr::between(P5_AGE_P, 10, 14) &
+    total.ado.10_14 = sum(dplyr::between(P5_AGE_P, 10, 14), na.rm = TRUE),
+    total.ado.15_19 = sum(dplyr::between(P5_AGE_P, 15, 19), na.rm = TRUE),
+    total.ado.birth.10_14 = sum(dplyr::between(P5_AGE_P, 10, 14) &
                                   P42_LAST_12_MON_P == 1, na.rm = TRUE),
-    total_ado_birth_15_19 = sum(dplyr::between(P5_AGE_P, 15, 19) &
+    total.ado.birth.15_19 = sum(dplyr::between(P5_AGE_P, 15, 19) &
                                   P42_LAST_12_MON_P == 1, na.rm = TRUE),
-    abr_10_14 = round((total_ado_birth_10_14 / total_ado_10_14) * 1000,2),
-    abr_15_19 = round((total_ado_birth_15_19 / total_ado_15_19) * 1000,2)
+    abr.10_14 = round((total.ado.birth.10_14 / total.ado.10_14) * 1000,2),
+    abr.15_19 = round((total.ado.birth.15_19 / total.ado.15_19) * 1000,2)
   ) |>
   dplyr::mutate(
     CONST_P_name = forcats::as_factor(CONST_P)
@@ -101,6 +104,7 @@ adolescent_birth_rate <-
 
 # Print table
 adolescent_birth_rate |>
+  head() |>
   gt::gt()
 ```
 
@@ -115,7 +119,7 @@ sf_feature |>
     by = c("NAME1_" = "CONST_P_name")
   ) |>
   tidyr::pivot_longer(
-    cols = c("abr_10_14", "abr_15_19"),
+    cols = c("abr.10_14", "abr.15_19"),
     names_to = "abr_cat",
     values_to = "abr_rate"
   ) |>
@@ -213,6 +217,7 @@ child_marriage <-
 
 # print table
 child_marriage |>
+  head() |>
   gt::gt()
 ```
 
@@ -301,6 +306,7 @@ youth_umemplyment <-
 # print table
 youth_umemplyment |>
   tibble::tibble() |>
+  head() |>
   gt::gt()
 ```
 
@@ -347,6 +353,7 @@ indicators_df <-
   )
 # print table
 indicators_df |>
+  head() |>
   gt::gt()
 ```
 
@@ -356,3 +363,122 @@ indicators_df |>
 
 readr::write_csv(x = indicators_df, file = "output/indicators.csv")
 ```
+
+## Optional : Application of DEGURBA to SDG Indicators
+
+In this section, we are Going to classify our admin data by DEGURBA classfication generated from the application of the DEGURBA methodology.
+
+**Step 1: Join the Constituency Shapes and The SDG Indicators**
+
+```{r}
+
+sdg_degurba <- 
+  sf_feature |>
+  dplyr::select(NAME1_, DEGURBA_L1, DEGURBA_L2) |>
+  dplyr::left_join(
+    indicators_df,
+    by = c("NAME1_" = "CONST_P_name")
+  ) |>
+  tibble::as.tibble() |>
+  dplyr::select(-geometry)
+
+# print table
+sdg_degurba |>
+  head() |>
+  gt::gt()
+```
+
+**Step 2 : SDG dissagregation by DEGURBA**
+
+```{r}
+
+sdg_degurba_diss <- 
+  sdg_degurba |>
+  tidyr::pivot_longer(
+    cols = c("DEGURBA_L1", "DEGURBA_L2"),
+    names_to = "degurba_level",
+    values_to = "degurba_class"
+  ) |>
+  dplyr::group_by(degurba_level, degurba_class) |>
+  dplyr::summarise(
+    total.girls.20_24 = sum(total.girls.20_24),
+    married.before.15	= sum(married.before.15),
+    married.before.18 = sum(married.before.18),
+    prop.cm.before.15	= round((married.before.15 / total.girls.20_24), 2),
+    prop.cm.before.18 = round((married.before.18 / total.girls.20_24), 2),
+    total.ado.10_14	= sum(total.ado.10_14),
+    total.ado.15_19	= sum(total.ado.15_19),
+    total.ado.birth.10_14	= sum(total.ado.birth.10_14),
+    total.ado.birth.15_19	= sum(total.ado.birth.15_19),
+    abr.10_14	= round((total.ado.birth.10_14/total.ado.10_14)*1000, 2),
+    abr.15_19	= round((total.ado.birth.15_19/total.ado.15_19)*1000, 2),
+    total.youth.15_24_Male = sum(total.youth.15_24_Male),
+    total.youth.15_24_Female = sum(total.youth.15_24_Female),
+    total.neet_Male	= sum(total.neet_Male),
+    total.neet_Female	= sum(total.neet_Female),
+    rate.neet_Male = round((total.neet_Male / total.youth.15_24_Male), 2),
+    rate.neet_Female = round((total.youth.15_24_Female / total.neet_Female), 2)
+  )
+
+
+
+sdg_degurba_diss <- 
+  sdg_degurba_diss |>
+  dplyr::mutate(
+    degurba_class = factor(degurba_class, 
+                           levels = c(1,2,3,11,12,13,21,23,30), 
+                           labels = c("Rural Area",
+                                      "Town or Semi-dense Area",
+                                      "City",
+                                      "Very Disperded Rural Area",
+                                      "Disperse Rural Area",
+                                      "Village",
+                                      "Suburban or Peri-urban Area",
+                                      "Dense Town",
+                                      "city"
+                                      )
+                           )
+    )
+
+```
+
+**Step 3: Visualization**
+
+```{r}
+
+sdg_degurba_diss |>
+  gt::gt() |>
+  gt::tab_header(title = "SDG INDICATOR BY DEGURBA",
+                 subtitle = "Zambia 2010 Pop & House Census") |>
+  gt::data_color(
+    columns = c("prop.cm.before.15",	
+                "prop.cm.before.18"
+                ),
+    method = "numeric",
+    palette = "OrRd",
+    domain = c(min(sdg_degurba_diss$prop.cm.before.15), 
+               max(sdg_degurba_diss$prop.cm.before.18))
+  ) |>
+  gt::data_color(
+    columns = c("abr.10_14", 
+                "abr.15_19"
+                ),
+    method = "numeric",
+    palette = "OrRd",
+    domain = c(min(sdg_degurba_diss$abr.10_14), 
+               max(sdg_degurba_diss$abr.15_19))
+  ) |>
+  gt::data_color(
+    columns = c("rate.neet_Male", 
+                "rate.neet_Female"
+                ),
+    method = "numeric",
+    palette = "OrRd",
+    domain = c(min(sdg_degurba_diss$rate.neet_Male), 
+               max(sdg_degurba_diss$rate.neet_Female))
+  )
+```
+
+[^1]
+
+[^1]: *UNFPA - SDG DISSAGREGATION BY DEGURBA \| by Derrick DEMEVENG \| Tanzania DEGURBA Workshop - May*
