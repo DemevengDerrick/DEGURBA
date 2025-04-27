@@ -1,9 +1,9 @@
 ---
 title: "SDG INDICATORS CALCULATIONS - Zambia Example"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 author:
 - name: Derrick Demeveng
   affiliation: United Nations Population Fund (UNFPA)
@@ -81,7 +81,7 @@ demographics$P5_AGE_P |> hist(col = "grey",
                               main = "Age Distribution",
                               xlab = "Age", 
                               ylab = "Count", 
-                              border = "white", 
+                              border = "black", 
                               breaks = length(unique(demographics$P5_AGE_P)))
 
 # Age distribution by Sex
@@ -105,7 +105,8 @@ demographics |>
                 fill = "Sex") +
   ggplot2::theme_minimal() +
   ggplot2::theme(
-    panel.grid = element_blank()
+    panel.grid = element_blank(),
+    plot.title = element_text(hjust = 0.5)
   )
 ```
 
@@ -127,7 +128,10 @@ demographics |>
   ggplot2::geom_bar(aes(x = P42_LAST_12_MON_P , fill = P42_LAST_12_MON_P, y = Freq), 
                     stat = "identity") +
   ggplot2::labs(title = "Distribution of Live Births in the past 12 Months") +
-  ggplot2::theme_minimal()
+  ggplot2::theme_minimal() +
+  ggplot2::theme(
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 -   *P32_ACTIVITY_LAST_12_MONTHS_P = Activity in the last 12 months*
@@ -151,7 +155,8 @@ demographics |>
                     stat = "identity") +
   ggplot2::theme_minimal() +
   ggplot2::theme(
-    panel.grid = element_blank()
+    panel.grid = element_blank(),
+    plot.title = element_text(face = "bold")
   ) +
   ggplot2::labs(
     title = "Frequency of Activities in the past 12 month by Sex",
@@ -165,11 +170,11 @@ demographics |>
 constituency_shape |>
   ggplot2::ggplot() +
   ggplot2::geom_sf(color = "black") +
-  ggrepel::geom_text_repel(data = constituency_shape, 
-                            aes(label = NAME1_, geometry = geometry),
-                            stat = "sf_coordinates") +
   ggplot2::labs(title = "Zambia Constituencies 2010") +
-  ggplot2::theme_void()
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
 ```
 
 ## SUSTAINABLE DEVELOPMENT GOALS (SDG) CALCULATION
@@ -180,13 +185,17 @@ constituency_shape |>
 
 ##### **SDG Indicator 3.7.2: Adolescent birth rate (aged 10–14 years; aged 15–19 years) per 1,000 women in that age group**
 
-adolescent_birth_rate_10_14 = (number of women aged 10 - 14 with live birth in the past 12 months / number of women aged 10 - 14)\*1000
+The adolescent birth rate for 10–14 years is calculated as
 
-adolescent_birth_rate_14_19 = (number of women aged 14 - 19 with live birth in the past 12 months / number of women aged 14 - 19)\*1000
+$\text{Adolescent Birth Rate}_{10-14} = \left( \frac{\text{Number of women aged 10-14 with live birth in the past 12 months}}{\text{Number of women aged 10-14}} \right) \times 1000$
+
+and for 15–19 years as
+
+$\text{Adolescent Birth Rate}_{15-19} = \left( \frac{\text{Number of women aged 15-19 with live birth in the past 12 months}}{\text{Number of women aged 15-19}} \right) \times 1000$
 
 **Input Variables Definition:**
 
--   *P4_SEX_P = SexP4_SEX_P*
+-   *P4_SEX_P = Sex*
 
 -   *P5_AGE_P = Age*
 
@@ -270,7 +279,7 @@ constituency_shape |>
   ggplot2::labs(title = "Adolescent Birth Rate per 1000") +
   ggplot2::theme(
     legend.position = "bottom",
-    plot.title = element_text(hjust = 0.5)
+    plot.title = element_text(hjust = 0.5, face = "bold")
   ) +
   ggplot2::facet_grid(~abr_cat)
 ```
@@ -281,9 +290,13 @@ constituency_shape |>
 
 ##### **SDG INDICATOR 5.3.1: Proportion of women aged 20–24 years who were married or in a union before age 15 and before age 18**
 
-child_marriage_before_15 = (number of women aged 20-24 who were married before age 15 / total number of women aged 20-24 )\* 100
+The child marriage indicator before age 15 is calculated as
 
-child_marriage_before_18 = (number of women aged 20-24 who were married before age 18 / total number of women aged 20-24 )\* 100
+$\text{Child Marriage Before Age 15} = \left( \frac{\text{Number of women aged 20–24 married before age 15}}{\text{Total number of women aged 20–24}} \right) \times 100$
+
+and before age 18 as
+
+$\text{Child Marriage Before Age 18} = \left( \frac{\text{Number of women aged 20–24 married before age 18}}{\text{Total number of women aged 20–24}} \right) \times 100$
 
 **Input Variables Definition:**
 
@@ -355,7 +368,7 @@ constituency_shape |>
   ggplot2::labs(title = "Child Marriage") +
   ggplot2::theme(
     legend.position = "bottom",
-    plot.title = element_text(hjust = 0.5)
+    plot.title = element_text(hjust = 0.5, face = "bold")
   ) +
   ggplot2::facet_grid(~child_marriage)
 ```
@@ -366,7 +379,9 @@ constituency_shape |>
 
 ##### **SDG INDICATOR 8.6.1: Proportion of youth (aged 15-24 years) not in education, employment or training**
 
-NEET rate (%) = (Youth – Youth in employment – Youth not in employment but in education or training) / Youth \*100
+The NEET rate is calculated as
+
+$\text{NEET Rate (%)} = \left( \frac{\text{Youth} - \text{Youth in employment} - \text{Youth not in employment but in education or training}}{\text{Youth}} \right) \times 100$
 
 **Input Variables Definition :**
 
@@ -447,7 +462,7 @@ constituency_shape |>
   ggplot2::labs(title = "Youth Umemployment") +
   ggplot2::theme(
     legend.position = "bottom",
-    plot.title = element_text(hjust = 0.5)
+    plot.title = element_text(hjust = 0.5, face = "bold")
   ) +
   ggplot2::facet_grid(~neet)
 ```
@@ -501,12 +516,15 @@ degurba_l1 <- constituency_shape |>
                            )
     ) |>
   ggplot2::ggplot() +
-  ggplot2::geom_sf(aes(fill = DEGURBA_L1)) +
+  ggplot2::geom_sf(aes(fill = DEGURBA_L1), color = "white") +
   ggplot2::scale_fill_manual(
     values = c("#375623","#FFC000","red")
     ) +
   ggplot2::theme_void() +
-  ggplot2::labs(title = "DEGURBA LEVEL 1")
+  ggplot2::labs(title = "DEGURBA LEVEL 1") +
+  ggplot2::theme(
+    plot.title = element_text(face = "bold")
+  )
 
 # degurba level 2
 degurba_l2 <- constituency_shape |>
@@ -523,12 +541,15 @@ degurba_l2 <- constituency_shape |>
                            )
     ) |>
   ggplot2::ggplot() +
-  ggplot2::geom_sf(aes(fill = DEGURBA_L2)) +
+  ggplot2::geom_sf(aes(fill = DEGURBA_L2), color = "white") +
   ggplot2::scale_fill_manual(
     values = c("#cdf57a","#abcd66","#375623","#ffff00","#732600", "red")
     ) +
   ggplot2::theme_void() +
-  ggplot2::labs(title = "DEGURBA LEVEL 2")
+  ggplot2::labs(title = "DEGURBA LEVEL 2") +
+  ggplot2::theme(
+    plot.title = element_text(face = "bold")
+  )
 
 # use patchwork to paste both plot side by side
 
@@ -706,10 +727,4 @@ sdg_degurba_diss |>
       rows = degurba_class == "Dense Town"
     )
   )
-
-# "#cdf57a","#abcd66","#375623","#ffff00","#732600", "red"
 ```
-
-[^1]
-
-[^1]: *UNFPA - SDG DISSAGREGATION BY DEGURBA \| by Derrick DEMEVENG \| Tanzania DEGURBA Workshop - May*

@@ -1,0 +1,63 @@
+% --- Content of preamble.tex (Revised) ---
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+% \usepackage{sectsty} % Commented out: Using titlesec instead is generally preferred
+\usepackage{titlesec}
+\usepackage{lscape}
+\usepackage{float}
+\usepackage{xcolor} % Use xcolor instead of color
+\usepackage{titling}
+% \usepackage{framed} % REMOVED: Defines \Shaded and conflicts with tcolorbox/custom def.
+% \usepackage{color} % REMOVED: xcolor is loaded and preferred
+\usepackage{fancyvrb}
+\usepackage{fvextra} % Often used by Pandoc for highlighting
+\usepackage[most]{tcolorbox} % Provides tcolorbox environment
+
+% Define the custom shaded box using tcolorbox
+% RENAMED from "Shaded" to "UNFPAShadedBox" to avoid name conflicts
+\newenvironment{UNFPAShadedBox}{%
+\begin{tcolorbox}[sharp corners, enhanced, colback=white, boxrule=0pt, borderline west={2pt}{0pt}{orange}]%
+}{\end{tcolorbox}}
+
+% Define Highlighting based on the RENAMED environment
+% UPDATED to use the new unique name
+\newenvironment{Highlighting}{\begin{UNFPAShadedBox}}{\end{UNFPAShadedBox}}
+
+% UNFPA Orange color definition
+\definecolor{unfpaorange}{RGB}{255,102,0}
+
+% --- Section/Subsection Formatting using titlesec ---
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{unfpaorange}} % Format
+  {\thesection}                                   % Label
+  {1em}                                           % Separation
+  {}                                              % Code before title
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{unfpaorange}}
+  {\thesubsection}
+  {1em}
+  {}
+
+% --- Footer Configuration ---
+\pagestyle{fancy}          % Activate fancyhdr
+\fancyhf{}                 % Clear header/footer fields
+\rfoot{Derrick Demeveng - UNFPA} % Set right footer
+\renewcommand{\headrulewidth}{0pt} % Remove header rule line
+\renewcommand{\footrulewidth}{0pt} % Remove footer rule line (optional)
+
+% --- Title Configuration ---
+% Ensure the logo file 'unfpa_logo.png' is in the same directory
+% or provide a correct path relative to your main document
+\pretitle{%
+  \begin{center}%
+  \IfFileExists{unfpa_logo.png}{% Check if logo file exists
+    \includegraphics[width=4cm]{unfpa_logo.png}\par\vspace{1cm}%
+  }{% Optional: Add a message if logo is missing
+    \texttt{unfpa\_logo.png NOT FOUND}\par\vspace{1cm}%
+  }
+}
+\posttitle{\end{center}}
+
+% Make fancyhdr settings apply correctly at the end of the preamble
+\pagestyle{fancy}
+% --- End of preamble.tex ---
