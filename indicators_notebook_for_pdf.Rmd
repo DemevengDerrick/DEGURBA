@@ -3,6 +3,12 @@ title: "SDG Indicators Calculations - Zambia Example"
 author: Derrick Demeveng - UNFPA
 date: "`r Sys.Date()`"
 output:
+  html_document:
+    df_print: paged
+    css: unfpa_style.css
+    toc: true
+    toc_depth: 2
+    number_sections: true
   pdf_document:
     toc: true
     toc_depth: 2
@@ -10,12 +16,6 @@ output:
     latex_engine: xelatex # Use xelatex or pdflatex
     includes:
       in_header: preamble.tex
-  html_document:
-    df_print: paged
-    css: unfpa_style.css
-    toc: true
-    toc_depth: 2
-    number_sections: true
 ---
 
 ## INTRODUCTION
@@ -198,9 +198,26 @@ demographics |>
 -   *CONST_P = Constituency (Admin 4)*
 
 ```{r message=FALSE, warning=FALSE}
+
+# pop by constituency
+pop_by_consti <- 
+  demographics |>
+  dplyr::group_by(CONST_P) |>
+  dplyr::mutate(
+    CONST_P = forcats::as_factor(CONST_P)
+    ) |>
+  dplyr::summarise(
+    pop = n()
+  )
+# merge with shape
 constituency_shape |>
+  dplyr::left_join(
+    pop_by_consti,
+    by = c("NAME1_" = "CONST_P")
+  ) |>
   ggplot2::ggplot() +
-  ggplot2::geom_sf(color = "black") +
+  ggplot2::geom_sf(aes(fill = pop), color = "black") +
+  ggplot2::scale_fill_distiller(palette = "BuPu", direction = 1) +
   ggplot2::labs(title = "Zambia Constituencies 2010") +
   ggplot2::theme_void() +
   ggplot2::theme(
@@ -285,8 +302,11 @@ adolescent_birth_rate <-
                                   P42_LAST_12_MON_P == 1, na.rm = TRUE),
     total.ado.birth.15_19 = sum(dplyr::between(P5_AGE_P, 15, 19) &
                                   P42_LAST_12_MON_P == 1, na.rm = TRUE),
+    
+    
     abr.10_14 = round((total.ado.birth.10_14 / total.ado.10_14) * 1000,2),
     abr.15_19 = round((total.ado.birth.15_19 / total.ado.15_19) * 1000,2)
+    
   ) |>
   dplyr::mutate(
     CONST_P_name = forcats::as_factor(CONST_P)
@@ -583,7 +603,7 @@ degurba_l1 <- constituency_shape |>
                            )
     ) |>
   ggplot2::ggplot() +
-  ggplot2::geom_sf(aes(fill = DEGURBA_L1), olor = "white") +
+  ggplot2::geom_sf(aes(fill = DEGURBA_L1), color = "white") +
   ggplot2::scale_fill_manual(
     values = c("#375623","#FFC000","red")
     ) +
