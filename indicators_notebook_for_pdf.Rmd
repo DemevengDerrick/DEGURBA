@@ -1,5 +1,5 @@
 ---
-title: "SDG Indicators Calculations - Zambia Example"
+title: "SDG Indicators Calculations From Census - Zambia Example"
 author: Derrick Demeveng - UNFPA
 date: "`r Sys.Date()`"
 output:
