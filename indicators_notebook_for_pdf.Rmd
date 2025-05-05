@@ -118,7 +118,7 @@ demographics$P5_AGE_P |> hist(col = "grey",
                               main = "Age Distribution",
                               xlab = "Age", 
                               ylab = "Count", 
-                              border = "white", 
+                              border = "black", 
                               breaks = length(unique(demographics$P5_AGE_P)))
 
 # Age distribution by Sex
@@ -141,6 +141,7 @@ demographics |>
                 y = "Age", 
                 fill = "Sex") +
   ggplot2::theme_minimal() +
+  ggplot2::scale_y_discrete(breaks = seq(0, 100, 10)) +
   ggplot2::theme(
     panel.grid = element_blank(),
     plot.title = element_text(face = "bold", hjust = 0.5)
