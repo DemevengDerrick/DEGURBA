@@ -34,7 +34,15 @@ This R markdown template will take through computation of some SDG 3, 5 and 8 ke
 
 if(!require("pacman")) install.packages("pacman")
 
-pacman::p_load(tidyverse, haven, forcats, gt, sf, ggrepel, patchwork, knitr)
+pacman::p_load(tidyverse, # data manipulation
+               haven, # 
+               forcats, 
+               gt, # great tables package to style tabular data
+               sf, # simple feature to read basic shapefiles
+               ggrepel, # manage lebelling positioning
+               patchwork, # paste different visuals together
+               knitr # package required to generate pdf documents
+               )
 ```
 
 ```{r}
