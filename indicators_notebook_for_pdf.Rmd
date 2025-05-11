@@ -3,12 +3,6 @@ title: "SDG Indicators Calculations From Census - Zambia Example"
 author: Derrick Demeveng - UNFPA
 date: "`r Sys.Date()`"
 output:
-  html_document:
-    df_print: paged
-    css: unfpa_style.css
-    toc: true
-    toc_depth: 2
-    number_sections: true
   pdf_document:
     toc: true
     toc_depth: 2
@@ -16,6 +10,12 @@ output:
     latex_engine: xelatex # Use xelatex or pdflatex
     includes:
       in_header: preamble.tex
+  html_document:
+    df_print: paged
+    css: unfpa_style.css
+    toc: true
+    toc_depth: 2
+    number_sections: true
 ---
 
 ## INTRODUCTION
@@ -113,36 +113,52 @@ demographics |>
 -   *P5_AGE_P = Age*
 
 ```{r message=FALSE, warning=FALSE}
-# Age distribution
-demographics$P5_AGE_P |> hist(col = "grey", 
-                              main = "Age Distribution",
-                              xlab = "Age", 
-                              ylab = "Count", 
-                              border = "black", 
-                              breaks = length(unique(demographics$P5_AGE_P)))
 
 # Age distribution by Sex
 demographics |>
-  group_by(P4_SEX_P, P5_AGE_P) |>
-  summarise(pop_count = n()/10000) |>
   mutate(
-    pop_count = case_when(
-      P4_SEX_P == 1 ~ -pop_count,
-      P4_SEX_P == 2 ~ pop_count
-    ),
     sex_label = factor(P4_SEX_P, levels = c(1, 2), labels = c("Male", "Female")),
-    age_factor = factor(P5_AGE_P, levels = sort(unique(P5_AGE_P)))
+    age_group = case_when(
+      P5_AGE_P <= 4 ~ "0-4",
+      between(P5_AGE_P, 5, 9) ~ "5-9",
+      between(P5_AGE_P, 10, 14) ~ "10-14",
+      between(P5_AGE_P, 15, 19) ~ "15-19",
+      between(P5_AGE_P, 20, 24) ~ "20-24",
+      between(P5_AGE_P, 25, 29) ~ "25-29",
+      between(P5_AGE_P, 30, 34) ~ "30-34",
+      between(P5_AGE_P, 35, 39) ~ "35-39",
+      between(P5_AGE_P, 40, 44) ~ "40-44",
+      between(P5_AGE_P, 45, 49) ~ "45-49",
+      between(P5_AGE_P, 50, 54) ~ "50-54",
+      between(P5_AGE_P, 55, 59) ~ "55-59",
+      between(P5_AGE_P, 60, 64) ~ "60-64",
+      between(P5_AGE_P, 65, 69) ~ "65-69",
+      between(P5_AGE_P, 70, 74) ~ "70-74",
+      between(P5_AGE_P, 75, 79) ~ "75-79",
+      P5_AGE_P >= 80 ~ "80+",
+      TRUE ~ "NA"
+    ),
+    age_group = factor(age_group, levels = c(
+      "0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34",
+      "35-39", "40-44", "45-49", "50-54", "55-59", "60-64",
+      "65-69", "70-74", "75-79", "80+", "NA"
+    ))
   ) |>
-  ggplot2::ggplot(aes(x = pop_count, y = age_factor, fill = sex_label)) +
-  ggplot2::geom_bar(stat = "identity", width = 1, , color = "white") +
-  ggplot2::scale_x_continuous(labels = abs) +
-  ggplot2::labs(title = "Age - Sex Distribution",
-                x = "Population Count (million)", 
-                y = "Age", 
-                fill = "Sex") +
-  ggplot2::theme_minimal() +
-  ggplot2::scale_y_discrete(breaks = seq(0, 100, 10)) +
-  ggplot2::theme(
+  group_by(sex_label, age_group) |>
+  summarise(pop_count = n() / 10000, .groups = "drop") |>
+  mutate(
+    pop_count = ifelse(sex_label == "Male", -pop_count, pop_count)
+  ) |>
+  ggplot(aes(x = pop_count, y = age_group, fill = sex_label)) +
+  geom_bar(stat = "identity", width = 0.9, color = "white") +
+  scale_x_continuous(labels = abs, name = "Population Count (million)") +
+  labs(
+    title = "Age - Sex Distribution",
+    y = "Age",
+    fill = "Sex"
+  ) +
+  theme_minimal() +
+  theme(
     panel.grid = element_blank(),
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
@@ -266,7 +282,7 @@ where:
 
 **Input Variables Definition:**
 
--   *P4_SEX_P = SexP4_SEX_P*
+-   *P4_SEX_P = Sex*
 
 -   *P5_AGE_P = Age*
 
