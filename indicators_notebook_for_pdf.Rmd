@@ -3,6 +3,12 @@ title: "SDG Indicators Calculations From Census - Zambia Example"
 author: Derrick Demeveng - UNFPA
 date: "`r Sys.Date()`"
 output:
+  html_document:
+    df_print: paged
+    css: unfpa_style.css
+    toc: true
+    toc_depth: 2
+    number_sections: true
   pdf_document:
     toc: true
     toc_depth: 2
@@ -10,12 +16,6 @@ output:
     latex_engine: xelatex # Use xelatex or pdflatex
     includes:
       in_header: preamble.tex
-  html_document:
-    df_print: paged
-    css: unfpa_style.css
-    toc: true
-    toc_depth: 2
-    number_sections: true
 ---
 
 ## INTRODUCTION
@@ -32,17 +32,19 @@ This R markdown template will take through computation of some SDG 3, 5 and 8 ke
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-if(!require("pacman")) install.packages("pacman")
+if(!require("pacman"))
+  install.packages("pacman")
 
-pacman::p_load(tidyverse, # data manipulation
-               haven, # 
-               forcats, 
-               gt, # great tables package to style tabular data
-               sf, # simple feature to read basic shapefiles
-               ggrepel, # manage lebelling positioning
-               patchwork, # paste different visuals together
-               knitr # package required to generate pdf documents
-               )
+pacman::p_load(tidyverse, # Collection of R packages for data manipulation, visualization, and analysis (includes dplyr, ggplot2, tidyr, readr, etc.)
+               haven, # Import and export data from statistical software formats (e.g., SPSS, Stata, SAS)
+               forcats, # Tools for working with categorical variables (factors), especially useful for ordering and releveling
+               gt, # Create beautiful, publication-ready tables directly from R
+               sf, # Handle spatial vector data using 'Simple Features' standard (shapefiles, GeoJSON, etc.)
+               ggrepel, # Prevent overlapping text labels in ggplot2 graphics by intelligently repositioning them
+               patchwork, # Combine multiple ggplot2 plots into one layout (side-by-side, stacked, etc.)
+               knitr, # Report generation engine to create dynamic documents (e.g., RMarkdown to PDF/HTML/Word)
+               openxlsx # Read/write Excel files without Java dependency; supports styles, formatting, and worksheets
+)
 ```
 
 ```{r}
@@ -110,6 +112,10 @@ demographics |>
   )
 ```
 
+```{r}
+ggplot2::ggsave(filename = "output/visuals/sex_dist.png")
+```
+
 -   *P5_AGE_P = Age*
 
 ```{r message=FALSE, warning=FALSE}
@@ -164,6 +170,10 @@ demographics |>
   )
 ```
 
+```{r}
+ggplot2::ggsave(filename = "output/visuals/age_sex_pyramid.png")
+```
+
 -   *P42_LAST_12_MON_P = Live births in the past 12 months*
 
 ```{r}
@@ -186,6 +196,10 @@ demographics |>
   ggplot2::theme(
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
+```
+
+```{r}
+ggplot2::ggsave(filename = "output/visuals/birth_distribution.png")
 ```
 
 -   *P32_ACTIVITY_LAST_12_MONTHS_P = Activity in the last 12 months*
@@ -218,6 +232,10 @@ demographics |>
   ggplot2::theme(
     plot.title = element_text(face = "bold")
   )
+```
+
+```{r}
+ggplot2::ggsave(filename = "output/visuals/activities_dist.png")
 ```
 
 -   *CONST_P = Constituency (Admin 4)*
@@ -253,7 +271,9 @@ A <- new_consti |>
   ggplot2::labs(title = "Pop by Constituencies 2010") +
   ggplot2::theme_void() +
   ggplot2::theme(
-    plot.title = element_text(face = "bold", hjust = 0.5)
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    legend.position = "bottom",
+    legend.text = element_text(angle = 90)
   )
 
 # map by pop den
@@ -264,7 +284,9 @@ B <- new_consti |>
   ggplot2::labs(title = "Pop density by Constituencies 2010") +
   ggplot2::theme_void() +
   ggplot2::theme(
-    plot.title = element_text(face = "bold", hjust = 0.5)
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    legend.position = "bottom",
+    legend.text = element_text(angle = 90)
   )
 
 
@@ -272,9 +294,13 @@ A + B
 
 ```
 
+```{r}
+ggplot2::ggsave(filename = "output/visuals/pop_dist.png")
+```
+
 ## SUSTAINABLE DEVELOPMENT GOALS (SDG) CALCULATION
 
-### SDG 3 : Good Health and Well Being
+### SDG 3 : Good Health and Well Being ![](https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Sustainable_Development_Goal_03GoodHealth.svg/2048px-Sustainable_Development_Goal_03GoodHealth.svg.png){width="60"}
 
 #### SDG TARGET 3.7: By 2030, ensure universal access to sexual and reproductive health-care services, including for family planning, information and education, and the integration of reproductive health into national strategies and programmes.
 
@@ -396,7 +422,11 @@ constituency_shape |>
   ggplot2::facet_grid(~abr_cat)
 ```
 
-### SDG 5 : GENDER EQUALITY
+```{r}
+ggplot2::ggsave(filename = "output/visuals/adolescent_birth_rate.png")
+```
+
+### SDG 5 : GENDER EQUALITY ![](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Sustainable_Development_Goal_05GenderEquality.svg/1200px-Sustainable_Development_Goal_05GenderEquality.svg.png){width="60"}
 
 #### SDG TARGET 5.3 : Eliminate all harmful practices, such as child, early and forced marriage and female genital mutilations
 
@@ -497,7 +527,11 @@ constituency_shape |>
   ggplot2::facet_grid(~child_marriage)
 ```
 
-### SDG 8 : DECENT WORK AND ECONOMIC GROWTH
+```{r}
+ggplot2::ggsave(filename = "output/visuals/child_marriage.png")
+```
+
+### ![]()SDG 8 : DECENT WORK AND ECONOMIC GROWTH ![](https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Sustainable_Development_Goal_08DecentWork.svg/2048px-Sustainable_Development_Goal_08DecentWork.svg.png){width="60"}
 
 #### SDG TARGET 8.6 : By 2020, substantially reduce the proportion of youth not in employment, education or training
 
@@ -593,12 +627,16 @@ constituency_shape |>
   ggplot2::geom_sf(aes(fill = neet_rate), color = "white") +
   ggplot2::scale_fill_distiller(palette = "RdPu", direction = 1) +
   ggplot2::theme_void() +
-  ggplot2::labs(title = "Youth Umemployment") +
+  ggplot2::labs(title = "NEET") +
   ggplot2::theme(
     legend.position = "bottom",
     plot.title = element_text(face = "bold", hjust = 0.5)
   ) +
   ggplot2::facet_grid(~neet)
+```
+
+```{r}
+ggplot2::ggsave(filename = "output/visuals/neet.png")
 ```
 
 ## EXPORT RESULTS SDG RESULTS TO CSV
@@ -652,13 +690,13 @@ degurba_l1 <- constituency_shape |>
   ggplot2::ggplot() +
   ggplot2::geom_sf(aes(fill = DEGURBA_L1), color = "white") +
   ggplot2::scale_fill_manual(
-    values = c("#375623","#FFC000","red")
+    values = c("#73B273","#FFC000","red")
     ) +
   ggplot2::theme_void() +
   ggplot2::labs(title = "DEGURBA LEVEL 1") +
   ggplot2::theme(
     plot.title = element_text(face = "bold", hjust = 0.5),
-    legend.position = "bottom"
+    #legend.position = "bottom"
   )
 
 # degurba level 2
@@ -684,12 +722,16 @@ degurba_l2 <- constituency_shape |>
   ggplot2::labs(title = "DEGURBA LEVEL 2") +
   ggplot2::theme(
     plot.title = element_text(face = "bold", hjust = 0.5),
-    legend.position = "bottom"
+    #legend.position = "bottom"
   )
 
 # use patchwork to paste both plot side by side
 
-degurba_l1 + degurba_l2
+degurba_l1 / degurba_l2
+```
+
+```{r}
+ggplot2::ggsave(filename = "output/visuals/degurba_classification.png")
 ```
 
 **Step 1: Join the Constituency Shapes and The SDG Indicators**
@@ -712,7 +754,7 @@ sdg_degurba |>
   gt::gt()
 ```
 
-**Step 2 : SDG disagregation by DEGURBA**
+**Step 2 : SDG disaggregation by DEGURBA**
 
 ```{r message=FALSE, warning=FALSE}
 
@@ -741,7 +783,7 @@ sdg_degurba_diss <-
     total.neet_Male	= sum(total.neet_Male),
     total.neet_Female	= sum(total.neet_Female),
     rate.neet_Male = round((total.neet_Male / total.youth.15_24_Male), 2),
-    rate.neet_Female = round((total.youth.15_24_Female / total.neet_Female), 2)
+    rate.neet_Female = round((total.neet_Female / total.youth.15_24_Female), 2)
   )
 
 
@@ -765,7 +807,162 @@ sdg_degurba_diss <-
 
 ```
 
+Export Results in CSV
+
+```{r}
+
+openxlsx::write.xlsx(x = sdg_degurba_diss,
+                 sheetName = "disaggregated_indicators",
+                 file = "output/disaggregated_indicators.xlsx")
+```
+
+```{r}
+# Create a workbook and add a worksheet
+wb <- openxlsx::createWorkbook()
+openxlsx::addWorksheet(wb, "disaggregated_indicators")
+
+# Write the data
+openxlsx::writeData(wb, sheet = "disaggregated_indicators", x = sdg_degurba_diss)
+
+# Create Styles
+greenStyle <- openxlsx::createStyle(fgFill = "#73B273", halign = "center", valign = "center")
+lgreenStyle <- openxlsx::createStyle(fgFill = "#cdf57a", halign = "center", valign = "center")
+mgreenStyle <- openxlsx::createStyle(fgFill = "#abcd66", halign = "center", valign = "center")
+dgreenStyle <- openxlsx::createStyle(fgFill = "#375623", halign = "center", valign = "center", fontColour = "white") 
+orangeStyle <- openxlsx::createStyle(fgFill = "#FFC000", halign = "center", valign = "center")
+yellowStyle <- openxlsx::createStyle(fgFill = "#ffff00", halign = "center", valign = "center")
+dredStyle <- openxlsx::createStyle(fgFill = "#732600", halign = "center", valign = "center", fontColour = "white")
+redStyle <- openxlsx::createStyle(fgFill = "#FF0000", halign = "center", valign = "center")
+
+# Apply the style to cells
+openxlsx::addStyle(wb, sheet = "disaggregated_indicators", style = greenStyle, rows = 2, cols = 2, gridExpand = FALSE)
+openxlsx::addStyle(wb, sheet = "disaggregated_indicators", style = orangeStyle, rows = 3, cols = 2, gridExpand = FALSE)
+openxlsx::addStyle(wb, sheet = "disaggregated_indicators", style = redStyle, rows = 4, cols = 2, gridExpand = FALSE)
+openxlsx::addStyle(wb, sheet = "disaggregated_indicators", style = lgreenStyle, rows = 5, cols = 2, gridExpand = FALSE)
+openxlsx::addStyle(wb, sheet = "disaggregated_indicators", style = mgreenStyle, rows = 6, cols = 2, gridExpand = FALSE)
+openxlsx::addStyle(wb, sheet = "disaggregated_indicators", style = dgreenStyle, rows = 7, cols = 2, gridExpand = FALSE)
+openxlsx::addStyle(wb, sheet = "disaggregated_indicators", style = yellowStyle, rows = 8, cols = 2, gridExpand = FALSE)
+openxlsx::addStyle(wb, sheet = "disaggregated_indicators", style = dredStyle, rows = 9, cols = 2, gridExpand = FALSE)
+openxlsx::addStyle(wb, sheet = "disaggregated_indicators", style = redStyle, rows =10, cols = 2, gridExpand = FALSE)
+
+# Merge Cells together
+openxlsx::mergeCells(wb, sheet = "disaggregated_indicators", rows = 2:4, cols = 1)
+openxlsx::mergeCells(wb, sheet = "disaggregated_indicators", rows = 5:10, cols = 1)
+
+# Save the workbook
+openxlsx::saveWorkbook(wb, file = "output/disaggregated_indicators.xlsx", overwrite = TRUE)
+```
+
 **Step 3: Visualization**
+
+```{r}
+
+# Adolescent Birth Rate
+sdg_degurba_diss |>
+  tidyr::pivot_longer(
+    cols = c(abr.10_14, abr.15_19),
+    names_to = "cat",
+    values_to = "prop"
+  ) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_bar(aes(x = degurba_class, y = prop, fill = degurba_class), stat = "identity", show.legend  = F) +
+  ggplot2::scale_fill_manual(
+    values = c("#73B273","#FFC000","red", "#cdf57a","#abcd66","#375623","#ffff00","#732600", "red")
+    ) +
+  ggplot2::labs(
+    title = "Adolescent Birth Rate 10-14years and 15-19years",
+    y = "Birth Rate per 1000"
+  ) +
+  ggplot2::theme() +
+  ggplot2::facet_grid(cat ~ degurba_level) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank(),
+    title = element_text(hjust = 0.5, face = "bold")
+  )
+
+
+```
+
+```{r}
+ggplot2::ggsave(filename = "output/visuals/degurba_adolescent_birth_rate.png")
+```
+
+```{r}
+
+# Child marriage
+sdg_degurba_diss |>
+  dplyr::mutate(
+    prop.cm.before.15 = prop.cm.before.15*100,
+    prop.cm.before.18 = prop.cm.before.18*100
+  ) |>
+  tidyr::pivot_longer(
+    cols = c(prop.cm.before.15, prop.cm.before.18),
+    names_to = "cat",
+    values_to = "prop"
+  ) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_bar(aes(x = degurba_class, y = prop, fill = degurba_class), stat = "identity", show.legend  = F) +
+  ggplot2::scale_fill_manual(
+    values = c("#73B273","#FFC000","red", "#cdf57a","#abcd66","#375623","#ffff00","#732600", "red")
+    ) +
+  ggplot2::labs(
+    title = "Child Marriage Before 15 & Before 18",
+    y = "Percentage (%)"
+  ) +
+  ggplot2::theme() +
+  ggplot2::facet_grid(cat ~ degurba_level) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank(),
+    title = element_text(hjust = 0.5, face = "bold")
+  )
+```
+
+```{r}
+ggplot2::ggsave(filename = "output/visuals/degurba_child_marriage.png")
+```
+
+```{r}
+
+# NEET
+sdg_degurba_diss |>
+  dplyr::mutate(
+    rate.neet_Male = rate.neet_Male*100,
+    rate.neet_Female = rate.neet_Female*100
+  ) |>
+  tidyr::pivot_longer(
+    cols = c(rate.neet_Male, rate.neet_Female),
+    names_to = "cat",
+    values_to = "prop"
+  ) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_bar(aes(x = degurba_class, y = prop, fill = degurba_class), stat = "identity", show.legend  = F) +
+  ggplot2::scale_fill_manual(
+    values = c("#73B273","#FFC000","red", "#cdf57a","#abcd66","#375623","#ffff00","#732600", "red")
+    ) +
+  ggplot2::labs(
+    title = "Youth Unemployment (NEET)",
+    y = "Percentage (%)"
+  ) +
+  ggplot2::theme() +
+  ggplot2::facet_grid(cat ~ degurba_level) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank(),
+    title = element_text(hjust = 0.5, face = "bold")
+  )
+
+```
+
+```{r}
+ggplot2::ggsave(filename = "output/visuals/degurba_neet.png")
+```
+
+GT Table output
 
 ```{r message=FALSE, warning=FALSE}
 
